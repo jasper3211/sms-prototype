@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sun* Sales Management System — Prototype</title>
+<style>
+  :root{
+    --bg:#f7f7f7; --surface:#ffffff; --ink:#23201f; --muted:#6e6a67; --line:#e7e4e1;
+    --brand:#ff2200; --brand-2:#ad0c00; --brand-soft:#ffe7e2;
+    --green:#16a34a; --green-soft:#e7f6ec; --amber:#d97706; --amber-soft:#fdf3e3;
+    --red:#ad0c00; --red-soft:#fbe3e0; --purple:#b69256; --purple-soft:#f3ecdd;
+    --teal:#0d9488; --shadow:0 1px 2px rgba(31,20,18,.06),0 8px 24px rgba(31,20,18,.07);
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+  a{color:inherit;text-decoration:none}
+  /* ---------- Layout ---------- */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  .sidebar{background:#201d1c;color:#cbc7c4;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 18px;font-weight:700;color:#fff;font-size:15px;border-bottom:1px solid #34302e}
+  .brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ff2200,#fdba05);display:grid;place-items:center;color:#fff;font-weight:800}
+  .nav{padding:10px 10px;overflow:auto;flex:1}
+  .nav .grp{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7d7773;margin:14px 12px 6px}
+  .nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:#cbc7c4;font-weight:500;margin:2px 0;cursor:pointer}
+  .nav a .i{width:18px;text-align:center;opacity:.9}
+  .nav a:hover{background:#2e2a28;color:#fff}
+  .nav a.active{background:var(--brand);color:#fff}
+  .nav a .badge{margin-left:auto;background:#34302e;color:#a59f9b;border-radius:20px;padding:1px 8px;font-size:11px}
+  .nav a.active .badge{background:rgba(255,255,255,.2);color:#fff}
+  .sidefoot{padding:12px 14px;border-top:1px solid #34302e;display:flex;align-items:center;gap:10px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:700}
+  .sidefoot small{color:#8a8480;display:block}
+  .main{display:flex;flex-direction:column;min-width:0}
+  /* ---------- Topbar ---------- */
+  .topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 22px;position:sticky;top:0;z-index:20}
+  .topbar h1{font-size:17px;margin:0;font-weight:700}
+  .search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 12px;width:300px;color:var(--muted)}
+  .search input{border:0;background:transparent;outline:0;width:100%;color:var(--ink)}
+  .icbtn{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;position:relative}
+  .icbtn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid #fff}
+  .content{padding:22px;overflow:auto}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* ---------- Generic ---------- */
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card .hd{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .card .hd h3{margin:0;font-size:15px}
+  .card .bd{padding:18px}
+  .muted{color:var(--muted)}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:9px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:13px}
+  .btn:hover{border-color:#d8d1cc}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.primary:hover{background:var(--brand-2)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .pill.green{background:var(--green-soft);color:var(--green)}
+  .pill.amber{background:var(--amber-soft);color:var(--amber)}
+  .pill.red{background:var(--red-soft);color:var(--red)}
+  .pill.blue{background:var(--brand-soft);color:var(--brand)}
+  .pill.purple{background:var(--purple-soft);color:var(--purple)}
+  .pill.gray{background:#efece9;color:var(--muted)}
+  .dotc{width:8px;height:8px;border-radius:50%;display:inline-block}
+  /* Icons (Lucide-style inline SVG, same set as react-icons/lu) */
+  .ic-svg{display:inline-block;vertical-align:-.16em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .nav a .i{display:grid;place-items:center}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi .label{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .kpi .val{font-size:26px;font-weight:800;margin:6px 0 4px}
+  .kpi .trend{font-size:12px;font-weight:600}
+  .trend.up{color:var(--green)} .trend.down{color:var(--red)}
+  .kpi .ic{float:right;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;background:#faf8f6}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#fbf7f6}
+  .co{display:flex;align-items:center;gap:10px}
+  .colg{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-weight:700;color:#fff;font-size:13px}
+  /* Charts */
+  .bars{display:flex;align-items:flex-end;gap:14px;height:180px;padding-top:10px}
+  .bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;justify-content:flex-end;height:100%}
+  .bars .b .stack{width:70%;border-radius:6px 6px 0 0;background:var(--brand);position:relative;transition:.3s}
+  .bars .b .stack.f{background:#ffcabf}
+  .bars .b small{color:var(--muted)}
+  .funnel{display:flex;flex-direction:column;gap:8px}
+  .funnel .f{display:flex;align-items:center;gap:12px}
+  .funnel .bar{height:34px;border-radius:7px;display:flex;align-items:center;padding:0 12px;color:#fff;font-weight:700;font-size:13px;min-width:60px}
+  .funnel .lab{width:130px;font-weight:600}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  /* Donut */
+  .donut{display:flex;gap:22px;align-items:center}
+  /* Kanban */
+  .board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px}
+  .col{background:#efece9;border-radius:12px;padding:10px;min-width:220px}
+  .col .colhd{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 10px;font-weight:700;font-size:13px}
+  .col .colhd .cnt{color:var(--muted);font-weight:600}
+  .col .sum{font-size:12px;color:var(--muted);padding:0 8px 8px}
+  .deal{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:9px;box-shadow:0 1px 2px rgba(16,24,40,.04);cursor:grab}
+  .deal:hover{border-color:#e9c6be}
+  .deal .t{font-weight:700;margin-bottom:5px}
+  .deal .meta{display:flex;align-items:center;justify-content:space-between;margin-top:9px;color:var(--muted);font-size:12px}
+  .deal .val{font-weight:800;color:var(--ink)}
+  .prob{height:5px;border-radius:6px;background:#efece9;margin-top:9px;overflow:hidden}
+  .prob span{display:block;height:100%;background:var(--brand)}
+  .tag{font-size:11px;padding:2px 7px;border-radius:6px;background:var(--bg);color:var(--muted);font-weight:600}
+  /* Tabs */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0}
+  .tabs button{border:0;background:transparent;padding:11px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-size:13px}
+  .tabs button.active{color:var(--brand);border-color:var(--brand)}
+  /* Drawer */
+  .scrim{position:fixed;inset:0;background:rgba(15,23,41,.45);opacity:0;pointer-events:none;transition:.2s;z-index:50}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:480px;max-width:92vw;background:var(--surface);
+    box-shadow:-10px 0 40px rgba(16,24,40,.18);transform:translateX(100%);transition:.28s;z-index:60;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer .dh{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .drawer .db{padding:20px;overflow:auto;flex:1}
+  .close{cursor:pointer;color:var(--muted);font-size:22px;line-height:1;border:0;background:none}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  .field .v{font-weight:600}
+  .timeline{position:relative;padding-left:22px}
+  .timeline:before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tl{position:relative;margin-bottom:16px}
+  .tl:before{content:"";position:absolute;left:-22px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--brand)}
+  .tl .when{font-size:12px;color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .progressbar{height:10px;border-radius:8px;background:#efece9;overflow:hidden}
+  .progressbar span{display:block;height:100%;background:linear-gradient(90deg,#ff2200,#fdba05)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .chip{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 11px;font-weight:600;color:var(--muted);cursor:pointer;font-size:13px}
+  .chip.active{background:var(--brand-soft);color:var(--brand);border-color:#ffd2c9}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{border:0;background:var(--surface);padding:8px 14px;font-weight:600;color:var(--muted);cursor:pointer;font-size:13px}
+  .seg button.active{background:var(--brand);color:#fff}
+  .alert{display:flex;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);margin-bottom:10px;align-items:flex-start}
+  .alert.warn{background:var(--amber-soft);border-color:#f4e0bf}
+  .alert.dang{background:var(--red-soft);border-color:#f3cccc}
+  .notice{background:var(--brand-soft);border:1px solid #ffd2c9;color:var(--brand-2);padding:9px 14px;border-radius:9px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .switch{width:38px;height:22px;border-radius:20px;background:#d8d1cc;position:relative;cursor:pointer;transition:.2s}
+  .switch.on{background:var(--green)}
+  .switch:after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on:after{left:18px}
+  @media(max-width:1024px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:860px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:fixed;left:-260px;z-index:80;transition:.25s;width:240px}
+    .sidebar.show{left:0}
+    .search{display:none}
+    .grid2{grid-template-columns:1fr}
+  }
+  .menutoggle{display:none}
+  @media(max-width:860px){.menutoggle{display:grid}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="logo">S*</span> Sales Hub</div>
+    <nav class="nav" id="nav">
+      <div class="grp">Overview</div>
+      <a data-view="dashboard" class="active"><span class="i" data-ic="grid"></span> Dashboard</a>
+      <a data-view="pipeline"><span class="i" data-ic="kanban"></span> Pipeline</a>
+      <div class="grp">Sales</div>
+      <a data-view="deals"><span class="i" data-ic="briefcase"></span> Deals <span class="badge">42</span></a>
+      <a data-view="customers"><span class="i" data-ic="building"></span> Customers <span class="badge">128</span></a>
+      <a data-view="activities"><span class="i" data-ic="phone"></span> Activities</a>
+      <a data-view="tasks"><span class="i" data-ic="checksq"></span> Tasks <span class="badge">7</span></a>
+      <div class="grp">Analytics</div>
+      <a data-view="forecast"><span class="i" data-ic="trendup"></span> Forecast &amp; Budget</a>
+      <a data-view="reports"><span class="i" data-ic="barchart"></span> Reports</a>
+      <div class="grp">Admin</div>
+      <a data-view="settings"><span class="i" data-ic="gear"></span> Settings</a>
+    </nav>
+    <div class="sidefoot">
+      <div class="avatar">RM</div>
+      <div><strong>Ryan M.</strong><small>Sales Manager</small></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icbtn menutoggle" onclick="document.getElementById('sidebar').classList.toggle('show')"><span data-ic="menu"></span></button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <div class="search"><span data-ic="search" data-sz="16"></span><input placeholder="Search customers, deals, contacts…" /></div>
+      <button class="icbtn" title="Notifications"><span data-ic="bell"></span><span class="dot"></span></button>
+      <button class="btn primary" onclick="openDeal('new')"><span data-ic="plus" data-sz="16"></span> New Deal</button>
+    </header>
+
+    <div class="content">
+
+      <!-- ========== DASHBOARD ========== -->
+      <section class="view active" id="dashboard">
+        <div class="notice"><span data-ic="link" data-sz="15"></span> HubSpot &amp; Google Workspace connected — last synced 8 min ago · Slack alerts enabled</div>
+        <div class="kpis">
+          <div class="kpi"><span class="ic" style="background:var(--brand-soft);color:var(--brand)"><span data-ic="wallet" data-sz="20"></span></span>
+            <div class="label">Pipeline Value</div><div class="val">¥184.6M</div>
+            <div class="trend up"><span data-ic="arrowup" data-sz="12"></span> 12.4% vs last month</div></div>
+          <div class="kpi"><span class="ic" style="background:var(--green-soft);color:var(--green)"><span data-ic="trophy" data-sz="20"></span></span>
+            <div class="label">Won (This Quarter)</div><div class="val">¥62.3M</div>
+            <div class="trend up"><span data-ic="arrowup" data-sz="12"></span> 8.1% · 18 deals</div></div>
+          <div class="kpi"><span class="ic" style="background:var(--purple-soft);color:var(--purple)"><span data-ic="target" data-sz="20"></span></span>
+            <div class="label">Win Rate</div><div class="val">34.7%</div>
+            <div class="trend down"><span data-ic="arrowdown" data-sz="12"></span> 2.3% vs last Q</div></div>
+          <div class="kpi"><span class="ic" style="background:var(--amber-soft);color:var(--amber)"><span data-ic="clock" data-sz="20"></span></span>
+            <div class="label">Avg. Lead Time</div><div class="val">47 days</div>
+            <div class="trend up"><span data-ic="arrowup" data-sz="12"></span> 3 days faster</div></div>
+        </div>
+
+        <div class="row" style="margin-top:16px">
+          <div class="card" style="flex:2;min-width:340px">
+            <div class="hd"><h3>Sales Forecast vs Target</h3>
+              <div class="seg"><button class="active">Monthly</button><button>Quarterly</button><button>Annual</button></div></div>
+            <div class="bd">
+              <div class="bars" id="dashBars"></div>
+              <div class="legend" style="margin-top:14px">
+                <span><span class="dotc" style="background:var(--brand)"></span> Weighted forecast</span>
+                <span><span class="dotc" style="background:#ffcabf"></span> Target</span>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="flex:1;min-width:280px">
+            <div class="hd"><h3>Pipeline by Phase</h3></div>
+            <div class="bd">
+              <div class="funnel" id="dashFunnel"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:16px">
+          <div class="card" style="flex:1.4;min-width:340px">
+            <div class="hd"><h3>Recent Activity</h3><a class="btn sm" data-view="activities">View all</a></div>
+            <div class="bd" style="padding:8px 18px">
+              <div class="timeline" id="dashFeed"></div>
+            </div>
+          </div>
+          <div class="card" style="flex:1;min-width:280px">
+            <div class="hd"><h3>Needs Attention</h3></div>
+            <div class="bd">
+              <div class="alert dang"><span style="color:var(--brand)"><span data-ic="stop" data-sz="20"></span></span><div><strong>3 stalled deals</strong><div class="muted">No update &gt; 14 days · ¥28.4M at risk</div></div></div>
+              <div class="alert warn"><span style="color:var(--amber)"><span data-ic="alarm" data-sz="20"></span></span><div><strong>5 tasks overdue</strong><div class="muted">Follow-ups &amp; proposals past due</div></div></div>
+              <div class="alert warn"><span style="color:var(--amber)"><span data-ic="calendar" data-sz="20"></span></span><div><strong>4 closing this week</strong><div class="muted">Expected order date approaching</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PIPELINE (KANBAN) ========== -->
+      <section class="view" id="pipeline">
+        <div class="toolbar">
+          <div class="seg"><button class="active">Board</button><button onclick="go('deals')">List</button></div>
+          <span class="chip active">All owners</span>
+          <span class="chip">My deals</span>
+          <span class="chip">Team: Enterprise</span>
+          <span class="chip"><span data-ic="warn" data-sz="13"></span> Stalled only</span>
+          <span style="margin-left:auto" class="muted">42 open deals · ¥184.6M weighted</span>
+        </div>
+        <div class="board" id="board"></div>
+      </section>
+
+      <!-- ========== DEALS (LIST) ========== -->
+      <section class="view" id="deals">
+        <div class="toolbar">
+          <div class="seg"><button onclick="go('pipeline')">Board</button><button class="active">List</button></div>
+          <span class="chip active">All</span><span class="chip">Open</span><span class="chip">Won</span>
+          <span class="chip">Lost</span><span class="chip">On hold</span>
+          <button class="btn sm" style="margin-left:auto"><span data-ic="download" data-sz="14"></span> Export</button>
+          <button class="btn primary sm" onclick="openDeal('new')"><span data-ic="plus" data-sz="14"></span> New Deal</button>
+        </div>
+        <div class="card"><div class="bd" style="padding:0">
+          <table id="dealsTable">
+            <thead><tr><th>Deal</th><th>Customer</th><th>Owner</th><th>Phase</th><th>Value</th><th>Prob.</th><th>Close Date</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div></div>
+      </section>
+
+      <!-- ========== CUSTOMERS ========== -->
+      <section class="view" id="customers">
+        <div class="toolbar">
+          <span class="chip active">All industries</span><span class="chip">IT / SaaS</span>
+          <span class="chip">Manufacturing</span><span class="chip">Finance</span><span class="chip">Retail</span>
+          <span class="chip" style="margin-left:auto"><span data-ic="warn" data-sz="13"></span> 2 possible duplicates</span>
+          <button class="btn primary sm"><span data-ic="plus" data-sz="14"></span> New Customer</button>
+        </div>
+        <div class="card"><div class="bd" style="padding:0">
+          <table id="custTable">
+            <thead><tr><th>Company</th><th>Industry</th><th>Location</th><th>Open Deals</th><th>Lifetime Value</th><th>Status</th><th>Owner</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div></div>
+      </section>
+
+      <!-- ========== ACTIVITIES ========== -->
+      <section class="view" id="activities">
+        <div class="toolbar">
+          <span class="chip active">All types</span><span class="chip"><span data-ic="mappin" data-sz="13"></span> Visit</span><span class="chip"><span data-ic="monitor" data-sz="13"></span> Online</span>
+          <span class="chip"><span data-ic="phone" data-sz="13"></span> Call</span><span class="chip"><span data-ic="mail" data-sz="13"></span> Email</span><span class="chip"><span data-ic="file" data-sz="13"></span> Proposal</span>
+          <div class="seg" style="margin-left:auto"><button class="active">My activity</button><button>Team</button></div>
+        </div>
+        <div class="row">
+          <div class="card" style="flex:2;min-width:340px">
+            <div class="hd"><h3>Activity Timeline</h3><button class="btn primary sm"><span data-ic="plus" data-sz="14"></span> Log Activity</button></div>
+            <div class="bd"><div class="timeline" id="actFeed"></div></div>
+          </div>
+          <div class="card" style="flex:1;min-width:260px">
+            <div class="hd"><h3>This Week</h3></div>
+            <div class="bd">
+              <div class="bars" id="actBars" style="height:140px"></div>
+              <div class="legend" style="margin-top:12px"><span><span class="dotc" style="background:var(--brand)"></span> Logged activities</span></div>
+              <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+              <div class="between"><span class="muted">Total this week</span><strong>34</strong></div>
+              <div class="between"><span class="muted">vs last week</span><span class="pill green"><span data-ic="arrowup" data-sz="12"></span> 21%</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TASKS ========== -->
+      <section class="view" id="tasks">
+        <div class="toolbar">
+          <span class="chip active">All</span><span class="chip">Today</span><span class="chip"><span data-ic="warn" data-sz="13"></span> Overdue</span><span class="chip">Upcoming</span>
+          <button class="btn primary sm" style="margin-left:auto"><span data-ic="plus" data-sz="14"></span> New Task</button>
+        </div>
+        <div class="card"><div class="bd" style="padding:0">
+          <table id="taskTable">
+            <thead><tr><th style="width:40px"></th><th>Task</th><th>Related Deal</th><th>Owner</th><th>Due</th><th>Priority</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div></div>
+      </section>
+
+      <!-- ========== FORECAST & BUDGET ========== -->
+      <section class="view" id="forecast">
+        <div class="kpis">
+          <div class="kpi"><div class="label">Annual Target</div><div class="val">¥520M</div><div class="muted">FY2026</div></div>
+          <div class="kpi"><div class="label">Closed Won (YTD)</div><div class="val">¥318M</div><div class="trend up">61% of target</div></div>
+          <div class="kpi"><div class="label">Weighted Pipeline</div><div class="val">¥184.6M</div><div class="muted">Open deals</div></div>
+          <div class="kpi"><div class="label">Projected Total</div><div class="val">¥502.6M</div><div class="trend down">97% of target</div></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="hd"><h3>Goal Achievement — FY2026</h3><span class="muted">Closed ¥318M / Target ¥520M</span></div>
+          <div class="bd">
+            <div class="progressbar"><span style="width:61%"></span></div>
+            <div class="between" style="margin-top:8px"><span class="muted">0</span><span class="muted">61% achieved</span><span class="muted">¥520M</span></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <div class="card" style="flex:2;min-width:340px">
+            <div class="hd"><h3>Quarterly Forecast</h3>
+              <div class="seg"><button class="active">By Team</button><button>By Rep</button><button>By Customer</button></div></div>
+            <div class="bd"><div class="bars" id="fcBars"></div>
+              <div class="legend" style="margin-top:14px">
+                <span><span class="dotc" style="background:var(--green)"></span> Closed</span>
+                <span><span class="dotc" style="background:var(--brand)"></span> Weighted forecast</span>
+                <span><span class="dotc" style="background:#ffcabf"></span> Target</span></div>
+            </div>
+          </div>
+          <div class="card" style="flex:1;min-width:280px">
+            <div class="hd"><h3>Budget vs Actual — by Rep</h3></div>
+            <div class="bd" style="padding:0"><table id="budgetTable">
+              <thead><tr><th>Rep</th><th>Target</th><th>Actual</th><th>%</th></tr></thead><tbody></tbody>
+            </table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== REPORTS ========== -->
+      <section class="view" id="reports">
+        <div class="toolbar">
+          <div class="seg"><button class="active">This Quarter</button><button>This Year</button><button>Custom</button></div>
+          <button class="btn sm" style="margin-left:auto"><span data-ic="download" data-sz="14"></span> Export PDF</button>
+          <button class="btn sm"><span data-ic="download" data-sz="14"></span> Export CSV</button>
+        </div>
+        <div class="row">
+          <div class="card" style="flex:1;min-width:300px">
+            <div class="hd"><h3>Deals Won vs Lost</h3></div>
+            <div class="bd"><div class="bars" id="repWinLoss"></div>
+              <div class="legend" style="margin-top:12px"><span><span class="dotc" style="background:var(--green)"></span> Won</span><span><span class="dotc" style="background:var(--red)"></span> Lost</span></div></div>
+          </div>
+          <div class="card" style="flex:1;min-width:300px">
+            <div class="hd"><h3>Reasons for Lost Deals</h3></div>
+            <div class="bd"><div class="funnel" id="repLost"></div></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <div class="card" style="flex:1;min-width:300px">
+            <div class="hd"><h3>Win Rate by Industry</h3></div>
+            <div class="bd" style="padding:0"><table id="repIndustry">
+              <thead><tr><th>Industry</th><th>Deals</th><th>Won</th><th>Win Rate</th></tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="card" style="flex:1;min-width:300px">
+            <div class="hd"><h3>Activity Volume by Rep</h3></div>
+            <div class="bd"><div class="funnel" id="repActivity"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== SETTINGS ========== -->
+      <section class="view" id="settings">
+        <div class="tabs" id="setTabs">
+          <button class="active" data-tab="phases">Deal Phases</button>
+          <button data-tab="perms">Permissions &amp; Roles</button>
+          <button data-tab="notif">Notifications</button>
+          <button data-tab="integ">Integrations</button>
+        </div>
+        <div class="card" style="border-top-left-radius:0;border-top-right-radius:0">
+          <div class="bd">
+            <!-- phases -->
+            <div data-pane="phases">
+              <div class="between" style="margin-bottom:14px"><h3 style="margin:0">Configure Deal Phases</h3><button class="btn primary sm"><span data-ic="plus" data-sz="14"></span> Add Phase</button></div>
+              <p class="muted" style="margin-top:0">Standardize the pipeline. Drag to reorder; set default win-probability per phase.</p>
+              <table id="phaseTable"><thead><tr><th>Order</th><th>Phase</th><th>Default Probability</th><th>Color</th><th></th></tr></thead><tbody></tbody></table>
+            </div>
+            <!-- perms -->
+            <div data-pane="perms" style="display:none">
+              <div class="between" style="margin-bottom:14px"><h3 style="margin:0">Roles &amp; Access Control</h3><button class="btn primary sm"><span data-ic="plus" data-sz="14"></span> Invite User</button></div>
+              <table id="permTable"><thead><tr><th>Role</th><th>View Deals</th><th>Edit Deals</th><th>Confidential</th><th>Manage Users</th><th>Reports</th></tr></thead><tbody></tbody></table>
+            </div>
+            <!-- notif -->
+            <div data-pane="notif" style="display:none">
+              <h3 style="margin-top:0">Notification &amp; Alert Rules</h3>
+              <div id="notifList"></div>
+            </div>
+            <!-- integ -->
+            <div data-pane="integ" style="display:none">
+              <h3 style="margin-top:0">External Integrations</h3>
+              <div id="integList" class="row"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ DEAL DRAWER ============ -->
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh">
+    <div>
+      <div class="muted" style="font-size:12px" id="dwBreadcrumb">Deals · Detail</div>
+      <h2 style="margin:4px 0 8px;font-size:18px" id="dwTitle">Deal</h2>
+      <div id="dwPills"></div>
+    </div>
+    <button class="close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="db" id="dwBody"></div>
+</aside>
+
+<script>
+/* =================== ICONS (Lucide-style inline SVG) =================== */
+const ICONS={
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  kanban:'<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="5" height="13" rx="1.5"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+  building:'<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/><path d="M10 21v-3h4v3"/>',
+  phone:'<path d="M5 4h3.5l1.5 4-2 1.2a11 11 0 0 0 5 5L18 12l4 1.5V18a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 1-2z"/>',
+  checksq:'<polyline points="9 11 12 14 20 6"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  trendup:'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+  barchart:'<line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+  menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  search:'<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
+  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  link:'<path d="M9 15 15 9"/><path d="M11 6.5 12.5 5a4 4 0 0 1 6 6L17 12.5"/><path d="M13 17.5 11.5 19a4 4 0 0 1-6-6L7 11.5"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="16.5" cy="14" r="1.1"/>',
+  trophy:'<path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3"/><path d="M17 6h3v1a3 3 0 0 1-3 3"/><line x1="12" y1="13" x2="12" y2="16"/><path d="M9 20h6"/><path d="M10 16h4l.4 4h-4.8z"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r="1"/>',
+  clock:'<circle cx="12" cy="12" r="8"/><polyline points="12 7.5 12 12 15 13.5"/>',
+  stop:'<path d="M8.2 3h7.6L21 8.2v7.6L15.8 21H8.2L3 15.8V8.2z"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16.01"/>',
+  alarm:'<circle cx="12" cy="13" r="7"/><polyline points="12 9.5 12 13 15 14.5"/><path d="M5 3 2.5 5.5M19 3l2.5 2.5"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="3" x2="8" y2="6"/><line x1="16" y1="3" x2="16" y2="6"/>',
+  file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>',
+  monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/>',
+  mappin:'<path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3.5 7 12 13 20.5 7"/>',
+  pin:'<path d="M12 17v5"/><path d="M9 3h6l-1 5 3 3v1H7v-1l3-3z"/>',
+  paperclip:'<path d="M21 11l-9 9a5 5 0 0 1-7-7l9-9a3.2 3.2 0 0 1 4.5 4.5l-9 9a1.4 1.4 0 0 1-2-2l8-8"/>',
+  download:'<path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><line x1="4" y1="20" x2="20" y2="20"/>',
+  message:'<path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>',
+  globe:'<circle cx="12" cy="12" r="8"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M12 4a13 13 0 0 1 0 16M12 4a13 13 0 0 0 0 16"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  plug:'<path d="M9 3v6M15 3v6"/><path d="M7 9h10v2a5 5 0 0 1-10 0z"/><line x1="12" y1="16" x2="12" y2="21"/>',
+  warn:'<path d="M12 4 21 20H3z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17.01"/>',
+  arrowup:'<line x1="12" y1="20" x2="12" y2="6"/><polyline points="6 12 12 6 18 12"/>',
+  arrowdown:'<line x1="12" y1="4" x2="12" y2="18"/><polyline points="6 12 12 18 18 12"/>',
+  check:'<polyline points="5 12 10 17 19 7"/>',
+  grip:'<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',
+  bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.5h6c0-1.2.4-1.9 1-2.5A6 6 0 0 0 12 3z"/>',
+};
+function ic(name,size){size=size||18;return `<svg class="ic-svg" viewBox="0 0 24 24" style="width:${size}px;height:${size}px">${ICONS[name]||''}</svg>`;}
+function paintIcons(root){(root||document).querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic,+e.dataset.sz||18);});}
+function actTag(a,sz){return `<span class="tag">${ic(a.ic,sz||13)} ${a.type}</span>`;}
+
+/* =================== MOCK DATA =================== */
+const fmt = n => '¥' + (n>=1e6 ? (n/1e6).toFixed(1)+'M' : (n/1e3).toFixed(0)+'K');
+const colorFor = s => { let h=0; for(const c of s) h=c.charCodeAt(0)+((h<<5)-h);
+  return `hsl(${h%360} 62% 52%)`; };
+const initials = s => s.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+const PHASES = [
+  {key:'lead',  name:'Lead',         color:'#8a8682', prob:10},
+  {key:'qual',  name:'Qualified',    color:'#b69256', prob:25},
+  {key:'prop',  name:'Proposal',     color:'#ff2200', prob:50},
+  {key:'nego',  name:'Negotiation',  color:'#ad0c00', prob:75},
+  {key:'close', name:'Closing',      color:'#16a34a', prob:90},
+];
+
+const REPS = ['Aiko Tanaka','Marcus Reyes','Priya Nair','Liam Chen','Sofia Cruz'];
+
+const DEALS = [
+  {id:1, name:'ERP Renewal — FY26',      cust:'Nakamura Industries', contact:'H. Sato',   owner:'Aiko Tanaka',  phase:'nego', value:24500000, prob:75, close:'2026-07-10', status:'open'},
+  {id:2, name:'Cloud Migration Platform', cust:'Brightwave SaaS',     contact:'J. Lee',    owner:'Marcus Reyes', phase:'prop', value:18200000, prob:50, close:'2026-07-22', status:'open'},
+  {id:3, name:'Analytics Suite Upgrade',  cust:'Tokyo Retail Group',  contact:'M. Abe',    owner:'Priya Nair',   phase:'close',value:31000000, prob:90, close:'2026-06-28', status:'open'},
+  {id:4, name:'Security Audit Package',    cust:'Daiwa Finance',       contact:'K. Mori',   owner:'Liam Chen',    phase:'qual', value:9800000,  prob:25, close:'2026-08-15', status:'open'},
+  {id:5, name:'Mobile App Build',          cust:'Sakura Logistics',    contact:'T. Yamada', owner:'Sofia Cruz',   phase:'lead', value:14300000, prob:10, close:'2026-09-01', status:'open'},
+  {id:6, name:'Data Warehouse POC',        cust:'Brightwave SaaS',     contact:'J. Lee',    owner:'Aiko Tanaka',  phase:'qual', value:6700000,  prob:25, close:'2026-08-05', status:'open'},
+  {id:7, name:'CRM Integration',           cust:'Nakamura Industries', contact:'H. Sato',   owner:'Marcus Reyes', phase:'prop', value:12400000, prob:50, close:'2026-07-30', status:'open', stalled:true},
+  {id:8, name:'Support Contract Renewal',  cust:'Tokyo Retail Group',  contact:'M. Abe',    owner:'Priya Nair',   phase:'nego', value:8900000,  prob:75, close:'2026-07-05', status:'open'},
+  {id:9, name:'AI Chatbot Pilot',          cust:'Daiwa Finance',       contact:'K. Mori',   owner:'Liam Chen',    phase:'lead', value:5200000,  prob:10, close:'2026-09-20', status:'open', stalled:true},
+  {id:10,name:'Warehouse IoT Rollout',     cust:'Sakura Logistics',    contact:'T. Yamada', owner:'Sofia Cruz',   phase:'close',value:27600000, prob:90, close:'2026-06-30', status:'open'},
+  {id:11,name:'Legacy System Sunset',      cust:'Nakamura Industries', contact:'H. Sato',   owner:'Aiko Tanaka',  phase:'prop', value:16800000, prob:50, close:'2026-08-12', status:'open'},
+  {id:12,name:'E-commerce Replatform',     cust:'Tokyo Retail Group',  contact:'M. Abe',    owner:'Marcus Reyes', phase:'qual', value:21300000, prob:25, close:'2026-08-28', status:'open'},
+];
+const WON = [
+  {id:90,name:'Payroll Modernization', cust:'Daiwa Finance', owner:'Liam Chen', value:19500000, status:'won', close:'2026-06-01'},
+  {id:91,name:'POS Upgrade Phase 1',   cust:'Tokyo Retail Group', owner:'Priya Nair', value:13200000, status:'won', close:'2026-05-20'},
+];
+const LOST = [
+  {id:80,name:'Marketing Cloud', cust:'Sakura Logistics', owner:'Sofia Cruz', value:8800000, status:'lost', reason:'Price', close:'2026-05-12'},
+];
+const ALLDEALS = [...DEALS, ...WON, ...LOST];
+
+const CUSTOMERS = [
+  {name:'Nakamura Industries', ind:'Manufacturing', loc:'Osaka, JP',   open:3, ltv:88000000, status:'Active',   owner:'Aiko Tanaka'},
+  {name:'Brightwave SaaS',     ind:'IT / SaaS',     loc:'Tokyo, JP',   open:2, ltv:42000000, status:'Active',   owner:'Marcus Reyes'},
+  {name:'Tokyo Retail Group',  ind:'Retail',        loc:'Tokyo, JP',   open:3, ltv:67000000, status:'Active',   owner:'Priya Nair'},
+  {name:'Daiwa Finance',       ind:'Finance',       loc:'Yokohama, JP',open:2, ltv:55000000, status:'Active',   owner:'Liam Chen'},
+  {name:'Sakura Logistics',    ind:'Manufacturing', loc:'Nagoya, JP',  open:2, ltv:31000000, status:'Prospect', owner:'Sofia Cruz'},
+  {name:'Hikari Media',        ind:'IT / SaaS',     loc:'Fukuoka, JP', open:0, ltv:12000000, status:'Dormant',  owner:'Aiko Tanaka'},
+];
+
+const ACTIVITIES = [
+  {ic:'file',    type:'Proposal',       who:'Aiko Tanaka', deal:'ERP Renewal — FY26', cust:'Nakamura Industries', when:'2h ago', note:'Sent revised proposal with phased pricing. Awaiting feedback by Fri.'},
+  {ic:'monitor', type:'Online meeting', who:'Priya Nair',  deal:'Analytics Suite Upgrade', cust:'Tokyo Retail Group', when:'5h ago', note:'Demo of dashboard module. Strong interest from CFO.'},
+  {ic:'phone',   type:'Call',           who:'Marcus Reyes',deal:'Cloud Migration Platform', cust:'Brightwave SaaS', when:'Yesterday', note:'Discussed migration timeline. Decision expected next week.'},
+  {ic:'mappin',  type:'Visit',          who:'Liam Chen',   deal:'Security Audit Package', cust:'Daiwa Finance', when:'Yesterday', note:'On-site scoping workshop with security team.'},
+  {ic:'mail',    type:'Email',          who:'Sofia Cruz',  deal:'Warehouse IoT Rollout', cust:'Sakura Logistics', when:'2 days ago', note:'Shared SOW draft and hardware BOM.'},
+  {ic:'phone',   type:'Call',           who:'Aiko Tanaka', deal:'CRM Integration', cust:'Nakamura Industries', when:'3 days ago', note:'Follow-up — no response, flagged as stalled.'},
+];
+
+const TASKS = [
+  {done:false, t:'Send revised quote', deal:'ERP Renewal — FY26', owner:'Aiko Tanaka', due:'Today', overdue:false, pri:'High'},
+  {done:false, t:'Schedule contract review', deal:'Analytics Suite Upgrade', owner:'Priya Nair', due:'Tomorrow', overdue:false, pri:'High'},
+  {done:false, t:'Follow up — no reply in 5d', deal:'CRM Integration', owner:'Marcus Reyes', due:'2 days ago', overdue:true, pri:'High'},
+  {done:false, t:'Prepare security scope doc', deal:'Security Audit Package', owner:'Liam Chen', due:'Jun 26', overdue:false, pri:'Medium'},
+  {done:false, t:'Confirm hardware budget', deal:'Warehouse IoT Rollout', owner:'Sofia Cruz', due:'Jun 27', overdue:false, pri:'Medium'},
+  {done:false, t:'Re-engage stalled lead', deal:'AI Chatbot Pilot', owner:'Liam Chen', due:'5 days ago', overdue:true, pri:'Low'},
+  {done:true,  t:'Send NDA', deal:'Data Warehouse POC', owner:'Aiko Tanaka', due:'Jun 20', overdue:false, pri:'Low'},
+];
+
+/* =================== RENDER HELPERS =================== */
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const phaseObj = k => PHASES.find(p=>p.key===k);
+
+/* ---- Dashboard charts ---- */
+function bars(node, data, max){ node.innerHTML='';
+  data.forEach(d=>{ const b=el('div','b');
+    const t=el('div','stack'); t.style.height=(d.v/max*100)+'%'; t.style.background=d.color||'var(--brand)';
+    if(d.v2!=null){ const t2=el('div','stack f'); t2.style.height=(d.v2/max*100)+'%';
+      const wrap=el('div'); wrap.style.cssText='display:flex;gap:4px;align-items:flex-end;width:100%;height:100%;justify-content:center';
+      t.style.width='42%'; t2.style.width='42%'; wrap.append(t,t2); b.append(wrap);
+    } else b.append(t);
+    b.append(el('small',null,d.l)); node.append(b);
+  });
+}
+function renderDash(){
+  bars($('#dashBars'),[
+    {l:'Mar',v:38,v2:42},{l:'Apr',v:46,v2:45},{l:'May',v:52,v2:48},
+    {l:'Jun',v:44,v2:50},{l:'Jul',v:58,v2:52},{l:'Aug',v:40,v2:55}
+  ],60);
+  const fn=$('#dashFunnel'); fn.innerHTML='';
+  const byPhase = PHASES.map(p=>({p, list:DEALS.filter(d=>d.phase===p.key)}));
+  const maxV = Math.max(...byPhase.map(x=>x.list.reduce((s,d)=>s+d.value,0)));
+  byPhase.forEach(({p,list})=>{ const sum=list.reduce((s,d)=>s+d.value,0);
+    const f=el('div','f');
+    f.append(el('div','lab',`${p.name} <span class="muted">(${list.length})</span>`));
+    const bar=el('div','bar',fmt(sum)); bar.style.background=p.color;
+    bar.style.width=Math.max(18,sum/maxV*100)+'%'; f.append(bar); fn.append(f);
+  });
+  const feed=$('#dashFeed'); feed.innerHTML='';
+  ACTIVITIES.slice(0,4).forEach(a=>{ const t=el('div','tl');
+    t.innerHTML=`<div class="when">${a.when} · ${a.who}</div>
+      <div>${actTag(a,12)} <strong>${a.cust}</strong> — ${a.deal}</div>
+      <div class="muted">${a.note}</div>`; feed.append(t);
+  });
+}
+
+/* ---- Pipeline board ---- */
+function renderBoard(){
+  const b=$('#board'); b.innerHTML='';
+  PHASES.forEach(p=>{ const list=DEALS.filter(d=>d.phase===p.key);
+    const sum=list.reduce((s,d)=>s+d.value,0);
+    const col=el('div','col');
+    col.innerHTML=`<div class="colhd"><span><span class="dotc" style="background:${p.color}"></span> ${p.name}</span><span class="cnt">${list.length}</span></div><div class="sum">${fmt(sum)} · weighted ${fmt(sum*p.prob/100)}</div>`;
+    list.forEach(d=>{ const card=el('div','deal');
+      card.onclick=()=>openDeal(d.id);
+      card.innerHTML=`<div class="t">${d.name}</div>
+        <div class="muted" style="font-size:12px">${ic('building',13)} ${d.cust}</div>
+        <div class="meta"><span class="val">${fmt(d.value)}</span>${d.stalled?`<span class="pill red">${ic('warn',12)} Stalled</span>`:`<span class="tag">${d.owner.split(' ')[0]}</span>`}</div>
+        <div class="prob"><span style="width:${d.prob}%"></span></div>`;
+      col.append(card);
+    });
+    b.append(col);
+  });
+}
+
+/* ---- Deals list ---- */
+function statusPill(s){ return s==='won'?'<span class="pill green">Won</span>'
+  : s==='lost'?'<span class="pill red">Lost</span>'
+  : s==='hold'?'<span class="pill amber">On hold</span>':'<span class="pill blue">Open</span>'; }
+function renderDeals(){
+  const tb=$('#dealsTable tbody'); tb.innerHTML='';
+  ALLDEALS.forEach(d=>{ const p=phaseObj(d.phase);
+    const tr=el('tr'); tr.onclick=()=>openDeal(d.id);
+    tr.innerHTML=`<td><strong>${d.name}</strong>${d.stalled?' <span class="pill red">'+ic('warn',12)+'</span>':''}</td>
+      <td>${d.cust}</td><td>${d.owner}</td>
+      <td>${p?`<span class="pill gray"><span class="dotc" style="background:${p.color}"></span>${p.name}</span>`:'—'}</td>
+      <td><strong>${fmt(d.value)}</strong></td>
+      <td>${d.prob!=null?d.prob+'%':'—'}</td>
+      <td>${d.close}</td><td>${statusPill(d.status)}</td>`;
+    tb.append(tr);
+  });
+}
+
+/* ---- Customers ---- */
+function renderCustomers(){
+  const tb=$('#custTable tbody'); tb.innerHTML='';
+  CUSTOMERS.forEach(c=>{ const tr=el('tr');
+    const sp = c.status==='Active'?'green':c.status==='Prospect'?'blue':'gray';
+    tr.innerHTML=`<td><div class="co"><span class="colg" style="background:${colorFor(c.name)}">${initials(c.name)}</span><strong>${c.name}</strong></div></td>
+      <td>${c.ind}</td><td>${c.loc}</td><td>${c.open}</td>
+      <td><strong>${fmt(c.ltv)}</strong></td>
+      <td><span class="pill ${sp}">${c.status}</span></td><td>${c.owner}</td>`;
+    tb.append(tr);
+  });
+}
+
+/* ---- Activities ---- */
+function renderActivities(){
+  const f=$('#actFeed'); f.innerHTML='';
+  ACTIVITIES.forEach(a=>{ const t=el('div','tl');
+    t.innerHTML=`<div class="when">${a.when} · ${a.who}</div>
+      <div>${actTag(a)} <strong>${a.cust}</strong> — ${a.deal}</div>
+      <div class="muted">${a.note}</div>`; f.append(t);
+  });
+  bars($('#actBars'),[{l:'M',v:6},{l:'T',v:9},{l:'W',v:5},{l:'T',v:8},{l:'F',v:6}],10);
+}
+
+/* ---- Tasks ---- */
+function renderTasks(){
+  const tb=$('#taskTable tbody'); tb.innerHTML='';
+  TASKS.forEach((t,i)=>{ const tr=el('tr');
+    const pr = t.pri==='High'?'red':t.pri==='Medium'?'amber':'gray';
+    tr.innerHTML=`<td><input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation()"></td>
+      <td style="${t.done?'text-decoration:line-through;color:var(--muted)':''}">${t.t}</td>
+      <td class="muted">${t.deal}</td><td>${t.owner}</td>
+      <td>${t.overdue?`<span class="pill red">${ic('warn',12)} ${t.due}</span>`:t.due}</td>
+      <td><span class="pill ${pr}">${t.pri}</span></td>`;
+    tb.append(tr);
+  });
+}
+
+/* ---- Forecast ---- */
+function renderForecast(){
+  bars($('#fcBars'),[
+    {l:'Q1',v:0},{l:'Q2',v:0},{l:'Q3',v:0},{l:'Q4',v:0}
+  ],1); // placeholder replaced below with grouped bars
+  // grouped 3-series bars
+  const node=$('#fcBars'); node.innerHTML='';
+  const data=[
+    {l:'Enterprise', closed:120,fc:55,tgt:180},
+    {l:'Mid-Market', closed:98, fc:48,tgt:160},
+    {l:'SMB',        closed:64, fc:36,tgt:110},
+    {l:'Partner',    closed:36, fc:28,tgt:70},
+  ];
+  const max=180;
+  data.forEach(d=>{ const b=el('div','b');
+    const wrap=el('div'); wrap.style.cssText='display:flex;gap:4px;align-items:flex-end;height:100%;width:100%;justify-content:center';
+    [['closed','var(--green)'],['fc','var(--brand)'],['tgt','#ffcabf']].forEach(([k,c])=>{
+      const s=el('div','stack'); s.style.height=(d[k]/max*100)+'%'; s.style.background=c; s.style.width='26%'; wrap.append(s);
+    });
+    b.append(wrap); b.append(el('small',null,d.l)); node.append(b);
+  });
+  const bt=$('#budgetTable tbody'); bt.innerHTML='';
+  const budget=[
+    {r:'Aiko Tanaka',tgt:120,act:118},{r:'Marcus Reyes',tgt:110,act:74},
+    {r:'Priya Nair',tgt:105,act:96},{r:'Liam Chen',tgt:95,act:88},{r:'Sofia Cruz',tgt:90,act:62},
+  ];
+  budget.forEach(b=>{ const pct=Math.round(b.act/b.tgt*100);
+    const cls=pct>=95?'green':pct>=75?'amber':'red';
+    bt.append(el('tr',null,`<td>${b.r}</td><td>¥${b.tgt}M</td><td>¥${b.act}M</td><td><span class="pill ${cls}">${pct}%</span></td>`));
+  });
+}
+
+/* ---- Reports ---- */
+function renderReports(){
+  const node=$('#repWinLoss'); node.innerHTML='';
+  const wl=[{l:'Mar',w:6,ls:3},{l:'Apr',w:8,ls:2},{l:'May',w:7,ls:4},{l:'Jun',w:9,ls:3}];
+  const max=12;
+  wl.forEach(d=>{ const b=el('div','b');
+    const wrap=el('div'); wrap.style.cssText='display:flex;gap:4px;align-items:flex-end;height:100%;width:100%;justify-content:center';
+    const w=el('div','stack'); w.style.height=(d.w/max*100)+'%'; w.style.background='var(--green)'; w.style.width='38%';
+    const l=el('div','stack'); l.style.height=(d.ls/max*100)+'%'; l.style.background='var(--red)'; l.style.width='38%';
+    wrap.append(w,l); b.append(wrap); b.append(el('small',null,d.l)); node.append(b);
+  });
+  const lost=$('#repLost'); lost.innerHTML='';
+  const reasons=[{l:'Price',v:38,c:'#ff2200'},{l:'Timing',v:24,c:'#ad0c00'},{l:'Competitor',v:18,c:'#b69256'},{l:'No budget',v:12,c:'#7a6033'},{l:'No decision',v:8,c:'#8a8682'}];
+  reasons.forEach(r=>{ const f=el('div','f');
+    f.append(el('div','lab',r.l));
+    const bar=el('div','bar',r.v+'%'); bar.style.background=r.c; bar.style.width=Math.max(15,r.v)+'%'; f.append(bar); lost.append(f);
+  });
+  const it=$('#repIndustry tbody'); it.innerHTML='';
+  [['Manufacturing',22,9],['IT / SaaS',18,8],['Retail',15,5],['Finance',12,5]].forEach(([n,d,w])=>{
+    const wr=Math.round(w/d*100);
+    it.append(el('tr',null,`<td>${n}</td><td>${d}</td><td>${w}</td><td><span class="pill ${wr>=45?'green':wr>=35?'amber':'red'}">${wr}%</span></td>`));
+  });
+  const ra=$('#repActivity'); ra.innerHTML='';
+  const acts=[['Aiko Tanaka',42],['Priya Nair',38],['Marcus Reyes',31],['Liam Chen',27],['Sofia Cruz',23]];
+  const am=Math.max(...acts.map(a=>a[1]));
+  acts.forEach(([n,v])=>{ const f=el('div','f'); f.append(el('div','lab',n));
+    const bar=el('div','bar',v); bar.style.background='var(--brand)'; bar.style.width=(v/am*100)+'%'; f.append(bar); ra.append(f);
+  });
+}
+
+/* ---- Settings ---- */
+function renderSettings(){
+  const pt=$('#phaseTable tbody'); pt.innerHTML='';
+  PHASES.forEach((p,i)=>{ pt.append(el('tr',null,
+    `<td><span class="muted">${ic('grip',14)}</span> ${i+1}</td><td><strong>${p.name}</strong></td><td>${p.prob}%</td>
+     <td><span class="dotc" style="background:${p.color}"></span> ${p.color}</td>
+     <td><button class="btn sm">Edit</button></td>`));
+  });
+  pt.append(el('tr',null,`<td>6</td><td><strong>Won</strong></td><td>100%</td><td><span class="dotc" style="background:#16a34a"></span> closed</td><td><button class="btn sm">Edit</button></td>`));
+  const yes='<span class="pill green">'+ic('check',13)+'</span>', no='<span class="pill gray">—</span>';
+  const perms=[
+    ['Administrator',yes,yes,yes,yes,yes],
+    ['Sales Manager',yes,yes,yes,no,yes],
+    ['Sales Rep',yes,yes,no,no,'<span class="pill amber">Own</span>'],
+    ['Viewer',yes,no,no,no,yes],
+  ];
+  const ptb=$('#permTable tbody'); ptb.innerHTML='';
+  perms.forEach(r=>ptb.append(el('tr',null,r.map((c,i)=>i===0?`<td><strong>${c}</strong></td>`:`<td>${c}</td>`).join(''))));
+  const notif=[
+    ['Task deadline approaching','1 day before due','Slack + Email',true],
+    ['Deal not updated','No activity in 14 days','Slack',true],
+    ['Expected order date near','3 days before close','Slack + Email',true],
+    ['Deal won','Immediately','Slack #sales-wins',true],
+    ['Large deal created','Value &gt; ¥20M','Email (managers)',false],
+  ];
+  const nl=$('#notifList'); nl.innerHTML='';
+  notif.forEach((n,i)=>{ const row=el('div','between');
+    row.style.cssText='padding:14px 0;border-bottom:1px solid var(--line)';
+    row.innerHTML=`<div><strong>${n[0]}</strong><div class="muted">Trigger: ${n[1]} · via ${n[2]}</div></div>`;
+    const sw=el('div','switch'+(n[3]?' on':'')); sw.onclick=()=>sw.classList.toggle('on');
+    row.append(sw); nl.append(row);
+  });
+  const integ=[
+    ['HubSpot','Connected · managed by Sun*JP','plug','#ff2200'],
+    ['Slack','Connected · #sales channel','message','#b69256'],
+    ['Google Workspace','SSO + Calendar sync','globe','#d97706'],
+    ['SSO (Sun* Google)','Enforced for all users','lock','#ad0c00'],
+  ];
+  const il=$('#integList'); il.innerHTML='';
+  integ.forEach(g=>{ const c=el('div','card'); c.style.cssText='flex:1;min-width:220px';
+    c.innerHTML=`<div class="bd"><div style="width:46px;height:46px;border-radius:11px;display:grid;place-items:center;background:var(--bg);color:${g[3]}">${ic(g[2],24)}</div>
+      <h3 style="margin:10px 0 4px">${g[0]}</h3><div class="muted" style="font-size:12px">${g[1]}</div>
+      <div style="margin-top:12px"><span class="pill green"><span class="dotc" style="background:currentColor"></span> Connected</span> <button class="btn sm">Configure</button></div></div>`;
+    il.append(c);
+  });
+}
+
+/* =================== DEAL DRAWER =================== */
+function openDeal(id){
+  const scrim=$('#scrim'), dw=$('#drawer');
+  if(id==='new'){
+    $('#dwBreadcrumb').textContent='Deals · New';
+    $('#dwTitle').textContent='New Deal';
+    $('#dwPills').innerHTML='<span class="pill blue">Draft</span>';
+    $('#dwBody').innerHTML=newDealForm();
+  } else {
+    const d=ALLDEALS.find(x=>x.id===id); const p=phaseObj(d.phase);
+    $('#dwBreadcrumb').textContent=`Deals · ${d.cust}`;
+    $('#dwTitle').textContent=d.name;
+    $('#dwPills').innerHTML=`${statusPill(d.status)} ${p?`<span class="pill gray"><span class="dotc" style="background:${p.color}"></span>${p.name}</span>`:''} ${d.stalled?`<span class="pill red">${ic('warn',12)} Stalled 16d</span>`:''}`;
+    $('#dwBody').innerHTML=dealDetail(d,p);
+  }
+  scrim.classList.add('open'); dw.classList.add('open');
+}
+function closeDrawer(){ $('#scrim').classList.remove('open'); $('#drawer').classList.remove('open'); }
+
+function dealDetail(d,p){
+  const acts=ACTIVITIES.filter(a=>a.deal===d.name);
+  return `
+  <div class="grid2">
+    <div class="field"><label>Customer</label><div class="v">${ic('building',15)} ${d.cust}</div></div>
+    <div class="field"><label>Contact</label><div class="v">${d.contact||'—'}</div></div>
+    <div class="field"><label>Owner</label><div class="v">${d.owner}</div></div>
+    <div class="field"><label>Expected Close</label><div class="v">${d.close}</div></div>
+    <div class="field"><label>Value</label><div class="v" style="font-size:18px">${fmt(d.value)}</div></div>
+    <div class="field"><label>Win Probability</label><div class="v">${d.prob}%
+      <div class="prob" style="margin-top:6px"><span style="width:${d.prob}%"></span></div></div></div>
+  </div>
+  <div class="field"><label>Weighted Forecast</label><div class="v">${fmt(d.value*d.prob/100)}</div></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <div class="between"><h3 style="margin:0;font-size:14px">Next Actions</h3><button class="btn sm">${ic('plus',13)} Add</button></div>
+  <div class="alert warn" style="margin-top:10px"><span>${ic('pin',18)}</span><div><strong>Send revised quote</strong><div class="muted">Due today · ${d.owner}</div></div></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <h3 style="margin:0 0 12px;font-size:14px">Activity History</h3>
+  <div class="timeline">
+    ${acts.length?acts.map(a=>`<div class="tl"><div class="when">${a.when} · ${a.who}</div>
+      <div>${actTag(a)}</div><div class="muted">${a.note}</div></div>`).join('')
+      :'<div class="muted">No activity logged yet.</div>'}
+  </div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <h3 style="margin:0 0 10px;font-size:14px">Related Files</h3>
+  <div class="muted">${ic('paperclip',14)} Proposal_v3.pdf · ${ic('paperclip',14)} SOW_draft.docx</div>
+  <div style="margin-top:20px;display:flex;gap:8px">
+    <button class="btn primary">Save</button>
+    <button class="btn">Mark Won</button>
+    <button class="btn">Mark Lost</button>
+  </div>`;
+}
+function newDealForm(){
+  return `
+  <div class="field"><label>Deal Name</label><input class="search" style="width:100%" placeholder="e.g. ERP Renewal — FY26"></div>
+  <div class="grid2">
+    <div class="field"><label>Customer</label><select class="search" style="width:100%">${CUSTOMERS.map(c=>`<option>${c.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Owner</label><select class="search" style="width:100%">${REPS.map(r=>`<option>${r}</option>`).join('')}</select></div>
+    <div class="field"><label>Value (¥)</label><input class="search" style="width:100%" placeholder="0"></div>
+    <div class="field"><label>Expected Close</label><input class="search" type="date" style="width:100%"></div>
+    <div class="field"><label>Phase</label><select class="search" style="width:100%">${PHASES.map(p=>`<option>${p.name} (${p.prob}%)</option>`).join('')}</select></div>
+    <div class="field"><label>Probability</label><input class="search" style="width:100%" value="10%"></div>
+  </div>
+  <div class="field"><label>Notes</label><textarea class="search" style="width:100%;height:80px"></textarea></div>
+  <p class="muted">${ic('bulb',14)} Input fields kept minimal — phase auto-fills probability. Standardized rules reduce data-entry burden.</p>
+  <div style="margin-top:14px;display:flex;gap:8px"><button class="btn primary">Create Deal</button><button class="btn" onclick="closeDrawer()">Cancel</button></div>`;
+}
+
+/* =================== NAVIGATION =================== */
+const TITLES={dashboard:'Dashboard',pipeline:'Sales Pipeline',deals:'Deals',customers:'Customers',
+  activities:'Sales Activities',tasks:'Tasks & Next Actions',forecast:'Forecast & Budget',reports:'Reports & Dashboards',settings:'Settings'};
+function go(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===view));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+  $('#pageTitle').textContent=TITLES[view]||view;
+  document.getElementById('sidebar').classList.remove('show');
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-view]'); if(a){ go(a.dataset.view); }
+});
+/* settings tabs */
+$('#setTabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#setTabs button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('[data-pane]').forEach(p=>p.style.display=p.dataset.pane===b.dataset.tab?'':'none');
+});
+/* chips toggle (visual) */
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.chip'); if(c && c.parentElement.querySelectorAll('.chip').length){
+    if(!e.shiftKey) c.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.toggle('active');
+  }
+  const sg=e.target.closest('.seg button'); if(sg){ sg.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active')); sg.classList.add('active'); }
+});
+
+/* =================== INIT =================== */
+renderDash(); renderBoard(); renderDeals(); renderCustomers();
+renderActivities(); renderTasks(); renderForecast(); renderReports(); renderSettings();
+paintIcons(); // inject all static [data-ic] placeholders
+</script>
+</body>
+</html>
