@@ -316,7 +316,7 @@
         <div class="row" style="margin-top:16px">
           <div class="card" style="flex:2;min-width:340px">
             <div class="hd"><h3>Sales Forecast vs Target</h3>
-              <div class="seg"><button class="active">Monthly</button><button>Quarterly</button><button>Annual</button></div></div>
+              <div class="seg"><button class="active" onclick="renderDashChart('monthly')">Monthly</button><button onclick="renderDashChart('quarterly')">Quarterly</button><button onclick="renderDashChart('annual')">Annual</button></div></div>
             <div class="bd">
               <div class="bars" id="dashBars"></div>
               <div class="legend" style="margin-top:14px">
@@ -355,11 +355,11 @@
       <section class="view" id="pipeline">
         <div class="toolbar">
           <div class="seg"><button class="active">Board</button><button onclick="go('deals')">List</button></div>
-          <span class="chip active">All owners</span>
-          <span class="chip">My deals</span>
-          <span class="chip">Team: Enterprise</span>
-          <span class="chip"><span data-ic="warn" data-sz="13"></span> Stalled only</span>
-          <span style="margin-left:auto" class="muted">42 open deals · ¥184.6M weighted</span>
+          <span class="chip active" onclick="setPipeFilter('all')">All owners</span>
+          <span class="chip" onclick="setPipeFilter('mine')">My deals</span>
+          <span class="chip" onclick="setPipeFilter('enterprise')">Team: Enterprise</span>
+          <span class="chip" onclick="setPipeFilter('stalled')"><span data-ic="warn" data-sz="13"></span> Stalled only</span>
+          <span id="pipeStat" style="margin-left:auto" class="muted">42 open deals · ¥184.6M weighted</span>
         </div>
         <div class="board" id="board"></div>
       </section>
@@ -368,8 +368,8 @@
       <section class="view" id="deals">
         <div class="toolbar">
           <div class="seg"><button onclick="go('pipeline')">Board</button><button class="active">List</button></div>
-          <span class="chip active">All</span><span class="chip">Open</span><span class="chip">Won</span>
-          <span class="chip">Lost</span><span class="chip">On hold</span>
+          <span class="chip active" onclick="setDealFilter('all')">All</span><span class="chip" onclick="setDealFilter('open')">Open</span><span class="chip" onclick="setDealFilter('won')">Won</span>
+          <span class="chip" onclick="setDealFilter('lost')">Lost</span><span class="chip" onclick="setDealFilter('hold')">On hold</span>
           <button class="btn sm" style="margin-left:auto"><span data-ic="download" data-sz="14"></span> Export</button>
           <button class="btn primary sm" onclick="openDeal('new')"><span data-ic="plus" data-sz="14"></span> New Deal</button>
         </div>
@@ -384,8 +384,8 @@
       <!-- ========== CUSTOMERS ========== -->
       <section class="view" id="customers">
         <div class="toolbar">
-          <span class="chip active">All industries</span><span class="chip">IT / SaaS</span>
-          <span class="chip">Manufacturing</span><span class="chip">Finance</span><span class="chip">Retail</span>
+          <span class="chip active" onclick="setCustFilter('all')">All industries</span><span class="chip" onclick="setCustFilter('IT / SaaS')">IT / SaaS</span>
+          <span class="chip" onclick="setCustFilter('Manufacturing')">Manufacturing</span><span class="chip" onclick="setCustFilter('Finance')">Finance</span><span class="chip" onclick="setCustFilter('Retail')">Retail</span>
           <span class="chip" style="margin-left:auto"><span data-ic="warn" data-sz="13"></span> 2 possible duplicates</span>
           <button class="btn primary sm" onclick="openCustomerModal()"><span data-ic="plus" data-sz="14"></span> New Customer</button>
         </div>
@@ -400,9 +400,9 @@
       <!-- ========== ACTIVITIES ========== -->
       <section class="view" id="activities">
         <div class="toolbar">
-          <span class="chip active">All types</span><span class="chip"><span data-ic="mappin" data-sz="13"></span> Visit</span><span class="chip"><span data-ic="monitor" data-sz="13"></span> Online</span>
-          <span class="chip"><span data-ic="phone" data-sz="13"></span> Call</span><span class="chip"><span data-ic="mail" data-sz="13"></span> Email</span><span class="chip"><span data-ic="file" data-sz="13"></span> Proposal</span>
-          <div class="seg" style="margin-left:auto"><button class="active">My activity</button><button>Team</button></div>
+          <span class="chip active" onclick="setActType('all')">All types</span><span class="chip" onclick="setActType('Visit')"><span data-ic="mappin" data-sz="13"></span> Visit</span><span class="chip" onclick="setActType('Online meeting')"><span data-ic="monitor" data-sz="13"></span> Online</span>
+          <span class="chip" onclick="setActType('Call')"><span data-ic="phone" data-sz="13"></span> Call</span><span class="chip" onclick="setActType('Email')"><span data-ic="mail" data-sz="13"></span> Email</span><span class="chip" onclick="setActType('Proposal')"><span data-ic="file" data-sz="13"></span> Proposal</span>
+          <div class="seg" style="margin-left:auto"><button onclick="setActScope('my')">My activity</button><button class="active" onclick="setActScope('team')">Team</button></div>
         </div>
         <div class="row">
           <div class="card" style="flex:2;min-width:340px">
@@ -425,7 +425,7 @@
       <!-- ========== TASKS ========== -->
       <section class="view" id="tasks">
         <div class="toolbar">
-          <span class="chip active">All</span><span class="chip">Today</span><span class="chip"><span data-ic="warn" data-sz="13"></span> Overdue</span><span class="chip">Upcoming</span>
+          <span class="chip active" onclick="setTaskFilter('all')">All</span><span class="chip" onclick="setTaskFilter('today')">Today</span><span class="chip" onclick="setTaskFilter('overdue')"><span data-ic="warn" data-sz="13"></span> Overdue</span><span class="chip" onclick="setTaskFilter('upcoming')">Upcoming</span>
           <button class="btn primary sm" style="margin-left:auto"><span data-ic="plus" data-sz="14"></span> New Task</button>
         </div>
         <div class="card"><div class="bd" style="padding:0">
@@ -454,7 +454,7 @@
         <div class="row" style="margin-top:16px">
           <div class="card" style="flex:2;min-width:340px">
             <div class="hd"><h3>Quarterly Forecast</h3>
-              <div class="seg"><button class="active">By Team</button><button>By Rep</button><button>By Customer</button></div></div>
+              <div class="seg"><button class="active" onclick="renderForecastChart('team')">By Team</button><button onclick="renderForecastChart('rep')">By Rep</button><button onclick="renderForecastChart('customer')">By Customer</button></div></div>
             <div class="bd"><div class="bars" id="fcBars"></div>
               <div class="legend" style="margin-top:14px">
                 <span><span class="dotc" style="background:var(--green)"></span> Closed</span>
@@ -474,7 +474,7 @@
       <!-- ========== REPORTS ========== -->
       <section class="view" id="reports">
         <div class="toolbar">
-          <div class="seg"><button class="active">This Quarter</button><button>This Year</button><button>Custom</button></div>
+          <div class="seg"><button class="active" onclick="renderReports('quarter')">This Quarter</button><button onclick="renderReports('year')">This Year</button><button onclick="renderReports('custom')">Custom</button></div>
           <button class="btn sm" style="margin-left:auto"><span data-ic="download" data-sz="14"></span> Export PDF</button>
           <button class="btn sm"><span data-ic="download" data-sz="14"></span> Export CSV</button>
         </div>
@@ -755,11 +755,18 @@ function bars(node, data, max){ node.innerHTML='';
     b.append(el('small',null,d.l)); node.append(b);
   });
 }
+// Forecast-vs-Target series (¥M) per time grain — toggled by the Monthly/Quarterly/Annual control.
+const DASH_PERIODS={
+  monthly:  [{l:'Mar',v:38,v2:42},{l:'Apr',v:46,v2:45},{l:'May',v:52,v2:48},{l:'Jun',v:44,v2:50},{l:'Jul',v:58,v2:52},{l:'Aug',v:40,v2:55}],
+  quarterly:[{l:'Q1',v:136,v2:145},{l:'Q2',v:148,v2:150},{l:'Q3',v:160,v2:158},{l:'Q4',v:138,v2:170}],
+  annual:   [{l:'2024',v:498,v2:540},{l:'2025',v:586,v2:600},{l:'2026',v:512,v2:640}],
+};
+function renderDashChart(period){
+  const data=DASH_PERIODS[period]||DASH_PERIODS.monthly;
+  bars($('#dashBars'),data,Math.max(1,...data.flatMap(d=>[d.v,d.v2])));
+}
 function renderDash(){
-  bars($('#dashBars'),[
-    {l:'Mar',v:38,v2:42},{l:'Apr',v:46,v2:45},{l:'May',v:52,v2:48},
-    {l:'Jun',v:44,v2:50},{l:'Jul',v:58,v2:52},{l:'Aug',v:40,v2:55}
-  ],60);
+  renderDashChart('monthly');
   const fn=$('#dashFunnel'); fn.innerHTML='';
   const byPhase = PHASES.map(p=>({p, list:DEALS.filter(d=>d.phase===p.key)}));
   const maxV = Math.max(...byPhase.map(x=>x.list.reduce((s,d)=>s+d.value,0)));
@@ -778,9 +785,20 @@ function renderDash(){
 }
 
 /* ---- Pipeline board ---- */
+let pipeFilter='all'; // all | mine | enterprise | stalled
+function setPipeFilter(f){ pipeFilter=f; renderBoard(); }
+// "Enterprise" has no segment field in the data — use deal size (≥¥20M) as the proxy.
+function pipeMatch(d){
+  if(pipeFilter==='mine')       return d.owner===CURRENT_USER;
+  if(pipeFilter==='enterprise') return d.value>=20000000;
+  if(pipeFilter==='stalled')    return !!d.stalled;
+  return true;
+}
 function renderBoard(){
   const b=$('#board'); b.innerHTML='';
-  PHASES.forEach(p=>{ const list=DEALS.filter(d=>d.phase===p.key);
+  let total=0, weighted=0;
+  PHASES.forEach(p=>{ const list=DEALS.filter(d=>d.phase===p.key && pipeMatch(d));
+    total+=list.length; weighted+=list.reduce((s,d)=>s+d.value*p.prob/100,0);
     const sum=list.reduce((s,d)=>s+d.value,0);
     const col=el('div','col');
     col.innerHTML=`<div class="colhd"><span><span class="dotc" style="background:${p.color}"></span> ${p.name}</span><span class="cnt">${list.length}</span></div><div class="sum">${fmt(sum)} · weighted ${fmt(sum*p.prob/100)}</div>`;
@@ -794,15 +812,20 @@ function renderBoard(){
     });
     b.append(col);
   });
+  const stat=$('#pipeStat'); if(stat) stat.textContent=`${total} open deals · ${fmt(weighted)} weighted`;
 }
 
 /* ---- Deals list ---- */
 function statusPill(s){ return s==='won'?'<span class="pill green">Won</span>'
   : s==='lost'?'<span class="pill red">Lost</span>'
   : s==='hold'?'<span class="pill amber">On hold</span>':'<span class="pill blue">Open</span>'; }
+let dealFilter='all'; // all | open | won | lost | hold
+function setDealFilter(f){ dealFilter=f; renderDeals(); }
 function renderDeals(){
   const tb=$('#dealsTable tbody'); tb.innerHTML='';
-  ALLDEALS.forEach(d=>{ const p=phaseObj(d.phase);
+  const list=ALLDEALS.filter(d=>dealFilter==='all'||d.status===dealFilter);
+  if(!list.length){ tb.innerHTML='<tr><td colspan="8" class="muted" style="padding:18px;text-align:center">No deals match this filter.</td></tr>'; return; }
+  list.forEach(d=>{ const p=phaseObj(d.phase);
     const tr=el('tr'); tr.onclick=()=>openDeal(d.id);
     tr.innerHTML=`<td><strong>${d.name}</strong>${d.stalled?' <span class="pill red">'+ic('warn',12)+'</span>':''}</td>
       <td>${d.cust}</td><td>${d.owner}</td>
@@ -815,9 +838,13 @@ function renderDeals(){
 }
 
 /* ---- Customers ---- */
+let custFilter='all'; // industry filter
+function setCustFilter(ind){ custFilter=ind; renderCustomers(); }
 function renderCustomers(){
   const tb=$('#custTable tbody'); tb.innerHTML='';
-  CUSTOMERS.forEach(c=>{ const tr=el('tr');
+  const list=CUSTOMERS.filter(c=>custFilter==='all'||c.ind===custFilter);
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="muted" style="padding:18px;text-align:center">No customers in this industry.</td></tr>'; return; }
+  list.forEach(c=>{ const tr=el('tr');
     tr.onclick=()=>openCustomer(c.name);
     const sp = c.status==='Active'?'green':c.status==='Prospect'?'blue':'gray';
     tr.innerHTML=`<td><div class="co"><span class="colg" style="background:${colorFor(c.name)}">${initials(c.name)}</span><strong>${c.name}</strong></div></td>
@@ -829,9 +856,19 @@ function renderCustomers(){
 }
 
 /* ---- Activities ---- */
+const CURRENT_USER='Aiko Tanaka';            // demo: signed-in rep used by the "My activity" filter
+let actFilter={type:'all', scope:'team'};    // type chip + My/Team scope
+function setActType(t){ actFilter.type=t; renderActivities(); }
+function setActScope(s){ actFilter.scope=s; renderActivities(); }
 function renderActivities(){
   const f=$('#actFeed'); f.innerHTML='';
-  ACTIVITIES.forEach(a=>{ const t=el('div','tl');
+  const list=ACTIVITIES.filter(a=>{
+    const typeOk = actFilter.type==='all' || a.type===actFilter.type;
+    const scopeOk = actFilter.scope==='team' || a.who===CURRENT_USER;
+    return typeOk && scopeOk;
+  });
+  if(!list.length){ f.innerHTML='<div class="muted" style="padding:18px 4px">No activities match this filter.</div>'; }
+  list.forEach(a=>{ const t=el('div','tl');
     t.innerHTML=`<div class="when">${a.when} · ${a.who}</div>
       <div>${actTag(a)} <strong>${a.cust}</strong> — ${a.deal}</div>
       <div class="muted">${a.note}</div>`; f.append(t);
@@ -840,9 +877,18 @@ function renderActivities(){
 }
 
 /* ---- Tasks ---- */
+let taskFilter='all';
+function setTaskFilter(f){ taskFilter=f; renderTasks(); }
 function renderTasks(){
   const tb=$('#taskTable tbody'); tb.innerHTML='';
-  TASKS.forEach((t,i)=>{ const tr=el('tr');
+  const list=TASKS.filter(t=>{
+    if(taskFilter==='today')   return t.due==='Today';
+    if(taskFilter==='overdue') return t.overdue;
+    if(taskFilter==='upcoming')return !t.overdue && t.due!=='Today';
+    return true; // all
+  });
+  if(!list.length){ tb.innerHTML='<tr><td colspan="6" class="muted" style="padding:18px;text-align:center">No tasks match this filter.</td></tr>'; return; }
+  list.forEach(t=>{ const tr=el('tr');
     const pr = t.pri==='High'?'red':t.pri==='Medium'?'amber':'gray';
     tr.innerHTML=`<td><input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation()"></td>
       <td style="${t.done?'text-decoration:line-through;color:var(--muted)':''}">${t.t}</td>
@@ -854,26 +900,44 @@ function renderTasks(){
 }
 
 /* ---- Forecast ---- */
-function renderForecast(){
-  bars($('#fcBars'),[
-    {l:'Q1',v:0},{l:'Q2',v:0},{l:'Q3',v:0},{l:'Q4',v:0}
-  ],1); // placeholder replaced below with grouped bars
-  // grouped 3-series bars
+// Build forecast groups (¥M) for the selected dimension.
+// "team" = curated segments; "rep"/"customer" = derived live from deal data.
+function forecastData(mode){
+  if(mode==='team'){
+    return [
+      {l:'Enterprise', closed:120,fc:55,tgt:180},
+      {l:'Mid-Market', closed:98, fc:48,tgt:160},
+      {l:'SMB',        closed:64, fc:36,tgt:110},
+      {l:'Partner',    closed:36, fc:28,tgt:70},
+    ];
+  }
+  const keyFn = mode==='rep' ? (d=>d.owner) : (d=>d.cust);
+  const map={};
+  ALLDEALS.forEach(d=>{ const k=keyFn(d); if(!k) return;
+    (map[k]=map[k]||{closed:0,fc:0});
+    if(d.status==='won') map[k].closed += d.value/1e6;                 // realized revenue
+    else if(d.status==='open') map[k].fc += d.value*(d.prob||0)/100/1e6; // weighted pipeline
+  });
+  return Object.keys(map).map(k=>({ l:k.split(' ')[0],
+    closed:Math.round(map[k].closed), fc:Math.round(map[k].fc),
+    tgt:Math.round((map[k].closed+map[k].fc)*1.25) }));   // target ≈ 25% stretch over projected
+}
+function renderForecastChart(mode){
+  const data=forecastData(mode);
+  const max=Math.max(1,...data.flatMap(d=>[d.closed,d.fc,d.tgt]));
   const node=$('#fcBars'); node.innerHTML='';
-  const data=[
-    {l:'Enterprise', closed:120,fc:55,tgt:180},
-    {l:'Mid-Market', closed:98, fc:48,tgt:160},
-    {l:'SMB',        closed:64, fc:36,tgt:110},
-    {l:'Partner',    closed:36, fc:28,tgt:70},
-  ];
-  const max=180;
+  const labels={closed:'Closed',fc:'Weighted forecast',tgt:'Target'};
   data.forEach(d=>{ const b=el('div','b');
     const wrap=el('div'); wrap.style.cssText='display:flex;gap:4px;align-items:flex-end;height:100%;width:100%;justify-content:center';
     [['closed','var(--green)'],['fc','var(--brand)'],['tgt','#ffd0c2']].forEach(([k,c])=>{
-      const s=el('div','stack'); s.style.height=(d[k]/max*100)+'%'; s.style.background=c; s.style.width='26%'; wrap.append(s);
+      const s=el('div','stack'); s.style.height=(d[k]/max*100)+'%'; s.style.background=c; s.style.width='26%';
+      s.title=`${labels[k]}: ¥${d[k]}M`; wrap.append(s);
     });
     b.append(wrap); b.append(el('small',null,d.l)); node.append(b);
   });
+}
+function renderForecast(){
+  renderForecastChart('team');
   const bt=$('#budgetTable tbody'); bt.innerHTML='';
   const budget=[
     {r:'Aiko Tanaka',tgt:120,act:118},{r:'Marcus Reyes',tgt:110,act:74},
@@ -886,14 +950,20 @@ function renderForecast(){
 }
 
 /* ---- Reports ---- */
-function renderReports(){
+// Period presets: win/loss series differ by range; table figures scale by factor k.
+const REPORT_PERIODS={
+  quarter:{ wl:[{l:'Mar',w:6,ls:3},{l:'Apr',w:8,ls:2},{l:'May',w:7,ls:4},{l:'Jun',w:9,ls:3}], k:1 },
+  year:   { wl:[{l:'Q1',w:19,ls:9},{l:'Q2',w:24,ls:8},{l:'Q3',w:21,ls:11},{l:'Q4',w:17,ls:7}], k:3.4 },
+  custom: { wl:[{l:'May',w:7,ls:4},{l:'Jun',w:9,ls:3}], k:0.55 },
+};
+function renderReports(period){
+  const cfg=REPORT_PERIODS[period]||REPORT_PERIODS.quarter;
   const node=$('#repWinLoss'); node.innerHTML='';
-  const wl=[{l:'Mar',w:6,ls:3},{l:'Apr',w:8,ls:2},{l:'May',w:7,ls:4},{l:'Jun',w:9,ls:3}];
-  const max=12;
-  wl.forEach(d=>{ const b=el('div','b');
+  const max=Math.max(1,...cfg.wl.flatMap(d=>[d.w,d.ls]));
+  cfg.wl.forEach(d=>{ const b=el('div','b');
     const wrap=el('div'); wrap.style.cssText='display:flex;gap:4px;align-items:flex-end;height:100%;width:100%;justify-content:center';
-    const w=el('div','stack'); w.style.height=(d.w/max*100)+'%'; w.style.background='var(--green)'; w.style.width='38%';
-    const l=el('div','stack'); l.style.height=(d.ls/max*100)+'%'; l.style.background='var(--red)'; l.style.width='38%';
+    const w=el('div','stack'); w.style.height=(d.w/max*100)+'%'; w.style.background='var(--green)'; w.style.width='38%'; w.title='Won: '+d.w;
+    const l=el('div','stack'); l.style.height=(d.ls/max*100)+'%'; l.style.background='var(--red)'; l.style.width='38%'; l.title='Lost: '+d.ls;
     wrap.append(w,l); b.append(wrap); b.append(el('small',null,d.l)); node.append(b);
   });
   const lost=$('#repLost'); lost.innerHTML='';
@@ -904,14 +974,15 @@ function renderReports(){
   });
   const it=$('#repIndustry tbody'); it.innerHTML='';
   [['Manufacturing',22,9],['IT / SaaS',18,8],['Retail',15,5],['Finance',12,5]].forEach(([n,d,w])=>{
-    const wr=Math.round(w/d*100);
-    it.append(el('tr',null,`<td>${n}</td><td>${d}</td><td>${w}</td><td><span class="pill ${wr>=45?'green':wr>=35?'amber':'red'}">${wr}%</span></td>`));
+    const dd=Math.round(d*cfg.k), ww=Math.round(w*cfg.k), wr=dd?Math.round(ww/dd*100):0;
+    it.append(el('tr',null,`<td>${n}</td><td>${dd}</td><td>${ww}</td><td><span class="pill ${wr>=45?'green':wr>=35?'amber':'red'}">${wr}%</span></td>`));
   });
   const ra=$('#repActivity'); ra.innerHTML='';
   const acts=[['Aiko Tanaka',42],['Priya Nair',38],['Marcus Reyes',31],['Liam Chen',27],['Sofia Cruz',23]];
   const am=Math.max(...acts.map(a=>a[1]));
   acts.forEach(([n,v])=>{ const f=el('div','f'); f.append(el('div','lab',n));
-    const bar=el('div','bar',v); bar.style.background='var(--brand)'; bar.style.width=(v/am*100)+'%'; f.append(bar); ra.append(f);
+    const vv=Math.round(v*cfg.k);
+    const bar=el('div','bar',vv); bar.style.background='var(--brand)'; bar.style.width=(v/am*100)+'%'; f.append(bar); ra.append(f);
   });
 }
 
