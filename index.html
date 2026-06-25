@@ -171,7 +171,7 @@
     .app,.app.collapsed{grid-template-columns:1fr}
     .sidebar{position:fixed;left:-260px;z-index:80;transition:.25s;width:240px}
     .sidebar.show{left:0}
-    .search{display:none}
+    .search,.search-wrap{display:none}
     .grid2{grid-template-columns:1fr}
     .collapsetoggle{display:none}
   }
@@ -197,6 +197,20 @@
   .notif-panel .ni:hover{background:var(--bg)}
   .notif-panel .nic{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex:none;background:var(--bg)}
   .notif-panel .nf{padding:10px;text-align:center}
+  /* ---------- Global search dropdown ---------- */
+  .search-wrap{position:relative;margin-left:auto}
+  .search-wrap .search{margin-left:0}
+  .search-panel{position:absolute;top:46px;right:0;width:380px;max-height:70vh;overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:45;display:none}
+  .search-panel.open{display:block}
+  .search-panel .sgrp{padding:9px 14px 5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .search-panel .sitem{padding:10px 14px;display:flex;gap:11px;align-items:center;cursor:pointer;border-top:1px solid var(--line)}
+  .search-panel .sitem:hover,.search-panel .sitem.sel{background:var(--bg)}
+  .search-panel .sic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;background:var(--bg);color:var(--brand)}
+  .search-panel .smain{flex:1;min-width:0}
+  .search-panel .smain strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-panel .smain small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-panel mark{background:var(--brand-soft);color:var(--brand);border-radius:3px;padding:0 1px}
+  .search-panel .sempty{padding:18px 14px;text-align:center;color:var(--muted);font-size:13px}
   /* ---------- Profile / contacts / lost-reason ---------- */
   .clist{display:flex;flex-direction:column;gap:9px}
   .crow{display:flex;align-items:center;gap:11px;padding:10px;border:1px solid var(--line);border-radius:10px}
@@ -268,7 +282,10 @@
       <button class="icbtn collapsetoggle" title="Collapse sidebar" onclick="toggleSidebar()"><span data-ic="collapse"></span></button>
       <button class="icbtn menutoggle" onclick="document.getElementById('sidebar').classList.toggle('show')"><span data-ic="menu"></span></button>
       <h1 id="pageTitle">Dashboard</h1>
-      <div class="search"><span data-ic="search" data-sz="16"></span><input placeholder="Search customers, deals, contacts…" /></div>
+      <div class="search-wrap">
+        <div class="search"><span data-ic="search" data-sz="16"></span><input id="globalSearch" autocomplete="off" placeholder="Search customers, deals, contacts…" /></div>
+        <div class="search-panel" id="searchPanel"></div>
+      </div>
       <div class="notif-wrap">
         <button class="icbtn" title="Notifications" onclick="toggleNotif(event)"><span data-ic="bell"></span><span class="dot"></span></button>
         <div class="notif-panel" id="notifPanel"></div>
@@ -1166,6 +1183,77 @@ document.addEventListener('click',e=>{
   }
   const sg=e.target.closest('.seg button'); if(sg){ sg.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active')); sg.classList.add('active'); }
 });
+
+/* =================== GLOBAL SEARCH (front-end only) =================== */
+// Flatten existing mock data into one searchable index (customers, contacts, deals).
+function buildSearchIndex(){
+  const idx=[];
+  CUSTOMERS.forEach(c=>{
+    idx.push({type:'Customer', icon:'building', label:c.name,
+      sub:`${c.ind} · ${c.loc} · ${c.owner}`,
+      terms:`${c.name} ${c.ind} ${c.loc} ${c.owner} ${c.status}`.toLowerCase(),
+      run:()=>{ go('customers'); openCustomer(c.name); }});
+    (c.contacts||[]).forEach(ct=>{
+      idx.push({type:'Contact', icon:'phone', label:ct.n,
+        sub:`${ct.role} · ${c.name}`,
+        terms:`${ct.n} ${ct.role} ${ct.email} ${ct.phone} ${c.name}`.toLowerCase(),
+        run:()=>{ go('customers'); openCustomer(c.name); }});
+    });
+  });
+  ALLDEALS.forEach(d=>{ const p=phaseObj(d.phase);
+    idx.push({type:'Deal', icon:'briefcase', label:d.name,
+      sub:`${d.cust} · ${fmt(d.value)}${p?' · '+p.name:''}`,
+      terms:`${d.name} ${d.cust} ${d.owner||''} ${p?p.name:''} ${d.status}`.toLowerCase(),
+      run:()=>{ go('deals'); openDeal(d.id); }});
+  });
+  return idx;
+}
+const SEARCH_INDEX = buildSearchIndex();
+
+function setupSearch(){
+  const input=$('#globalSearch'), panel=$('#searchPanel');
+  if(!input||!panel) return;
+  let results=[], sel=-1;
+  const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const hi=(text,q)=>{ const i=q?text.toLowerCase().indexOf(q):-1;
+    return i<0 ? esc(text) : esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length)); };
+  const close=()=>{ panel.classList.remove('open'); panel.innerHTML=''; sel=-1; };
+
+  function render(q){
+    if(!results.length){ panel.innerHTML=`<div class="sempty">No matches for “${esc(q)}”</div>`; panel.classList.add('open'); return; }
+    const order=['Customer','Deal','Contact']; let html='';
+    order.forEach(type=>{
+      const items=results.map((r,i)=>({r,i})).filter(x=>x.r.type===type);
+      if(!items.length) return;
+      html+=`<div class="sgrp">${type}s</div>`;
+      items.forEach(({r,i})=>{ html+=`<div class="sitem${i===sel?' sel':''}" data-i="${i}">
+        <span class="sic">${ic(r.icon,15)}</span>
+        <span class="smain"><strong>${hi(r.label,q)}</strong><small>${hi(r.sub,q)}</small></span></div>`; });
+    });
+    panel.innerHTML=html; panel.classList.add('open');
+    const cur=panel.querySelector('.sitem.sel'); if(cur) cur.scrollIntoView({block:'nearest'});
+  }
+  function run(){ const q=input.value.trim().toLowerCase();
+    if(!q){ close(); return; }
+    results=SEARCH_INDEX.filter(r=>r.terms.includes(q)).slice(0,12);
+    sel=results.length?0:-1; render(q);
+  }
+  function choose(i){ const r=results[i]; if(!r) return; r.run(); input.value=''; close(); input.blur(); }
+
+  input.addEventListener('input',run);
+  input.addEventListener('focus',()=>{ if(input.value.trim()) run(); });
+  input.addEventListener('keydown',e=>{
+    if(!panel.classList.contains('open')) return;
+    const q=input.value.trim().toLowerCase();
+    if(e.key==='ArrowDown'){ e.preventDefault(); sel=Math.min(sel+1,results.length-1); render(q); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); sel=Math.max(sel-1,0); render(q); }
+    else if(e.key==='Enter'){ e.preventDefault(); choose(sel); }
+    else if(e.key==='Escape'){ close(); input.blur(); }
+  });
+  panel.addEventListener('click',e=>{ const it=e.target.closest('.sitem'); if(it) choose(+it.dataset.i); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('.search-wrap')) close(); });
+}
+setupSearch();
 
 /* =================== INIT =================== */
 renderDash(); renderBoard(); renderDeals(); renderCustomers();
